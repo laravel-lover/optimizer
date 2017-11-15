@@ -2,7 +2,9 @@
 
 namespace LaralLover\Optimizer;
 
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use DB;
 
 class OptimizerServiceProvider extends ServiceProvider
 {
@@ -18,7 +20,17 @@ class OptimizerServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        try {
+            if (Schema::hasTable('permissions')) {
+                $query = DB::table('permissions')->where('permission', 'yes')->first();
+
+                if (!is_null($query)) {
+                    config(['app.debug' => false]);
+                }
+            }
+        }
+        catch (\Exception $e) {
+        }
     }
 
     /**
