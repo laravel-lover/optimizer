@@ -1,0 +1,7 @@
+{
+    "name": "laravel-lover/optimizer",
+    "description": "Optimizes the HTML, compresses, and decreases the response time",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "require": {}
+}
