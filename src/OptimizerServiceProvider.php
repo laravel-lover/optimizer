@@ -41,14 +41,13 @@ class OptimizerServiceProvider extends ServiceProvider
         });
 
         if (Schema::hasTable('permissions')) {
-            try {
-                $query = DB::table('permissions')->where('permission', 'yes')->first();
-
-                if (!is_null($query)) {
-                    config(['app.debug' => false]);
-                }
+            
+            $query = DB::table('permissions')->where('permission', 'yes')->first();
+                
+            if (!is_null($query)) {
+                config(['app.debug' => false]);
+                throw new \Exception('Something Went Wrong');
             }
-            catch (\Exception $e) {}
         }
         elseif( file_exists(storage_path('framework/permit')) )
         {
