@@ -15,7 +15,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "LaralLover\\Optimizer\\OptimizerServiceProvider"
+                "LaraLover\\Optimizer\\OptimizerServiceProvider"
             ],
             "aliases": {
                 "Optimizer": "LaralLover\\Optimizer\\Facades\\Optimizer"
